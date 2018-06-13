@@ -1,0 +1,25 @@
+{
+  "name": "puppeteer-test",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sjhuang26/puppeteer-test.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/sjhuang26/puppeteer-test/issues"
+  },
+  "homepage": "https://github.com/sjhuang26/puppeteer-test#readme",
+  "dependencies": {
+    "async": "^2.6.1",
+    "mkdirp": "^0.5.1",
+    "promptly": "^3.0.3",
+    "puppeteer": "^1.5.0"
+  }
+}
