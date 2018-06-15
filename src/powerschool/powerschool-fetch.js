@@ -1,6 +1,6 @@
 const utils = require('./../web-scraping-utils');
 
-module.exports = utils.preset(async (puppeteer, promptly, outputDirectory, username, password, shallow, screenshots, headless) => {
+const query = utils.puppeteerPreset(async (puppeteer, promptly, outputDirectory, username, password, shallow, screenshots, headless) => {
   // INIT
   if (username === undefined) {
     username = await promptly.prompt('Username: ');
@@ -76,7 +76,13 @@ module.exports = utils.preset(async (puppeteer, promptly, outputDirectory, usern
 
     let courses = [];
     for (const e of document.querySelectorAll('#quickLookup > table.linkDescList.grid > tbody > tr:nth-child(n+4):not(:nth-last-child(1))')) {
+      const rawEmail = e.querySelector(':nth-child(12) > a:nth-child(3)').href.split(':')[1];
       courses.push({
+        expression: safeTextContent(e.querySelector(':nth-child(1)')),
+        name: safeNodeValue(e.querySelector(':nth-child(12)').childNodes[0]),
+        email: rawEmail.startsWith('no.email.address') ? '' : rawEmail,
+        room: safeTextContent(e.querySelector(':nth-child(12)')).split(':')[1].trim(),
+        teacher: safeTextContent(e.querySelector(':nth-child(12) > a:nth-child(3)')).substring(6),
         grades: {
           Q1: parseGrade(e.querySelector(':nth-child(13)')),
           Q2: parseGrade(e.querySelector(':nth-child(14)')),
@@ -87,9 +93,7 @@ module.exports = utils.preset(async (puppeteer, promptly, outputDirectory, usern
           F1: parseGrade(e.querySelector(':nth-child(19)'))
         },
         absences: safeParseIntContent(e.querySelector(':nth-child(20)')),
-        tardies: safeParseIntContent(e.querySelector(':nth-child(21)')),
-        room: safeTextContent(e.querySelector(':nth-child(12)')).split(':')[1].trim(),
-        email: e.querySelector(':nth-child(12) > a:nth-child(3)').href.split(':')[1]
+        tardies: safeParseIntContent(e.querySelector(':nth-child(21)'))
       });
     }
 
@@ -109,7 +113,7 @@ module.exports = utils.preset(async (puppeteer, promptly, outputDirectory, usern
         links.push(x.href);
       });
       return links;
-      
+
     });
 
     // SCRAPE COURSE PAGES
@@ -175,12 +179,6 @@ module.exports = utils.preset(async (puppeteer, promptly, outputDirectory, usern
           }
         }
 
-        // OTHER
-        const $description = document.querySelector('#content-main > div.box-round > table.linkDescList > tbody > tr:nth-child(2)');
-        course.name = safeTextContent($description.querySelector(':nth-child(1)'));
-        course.teacher = safeTextContent($description.querySelector(':nth-child(2)'));
-        course.expression = safeTextContent($description.querySelector(':nth-child(3)'));
-
         return course;
       }));
     }
@@ -189,4 +187,7 @@ module.exports = utils.preset(async (puppeteer, promptly, outputDirectory, usern
   // WRAP UP
   browser.close();
   return result;
-}, 'output/powerschool');
+});
+
+module.exports.query = query;
+module.exports = utils.ioPreset(query);
