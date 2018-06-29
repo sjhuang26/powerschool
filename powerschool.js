@@ -10,6 +10,6 @@ program
   .option('-v, --screenshots', 'add screenshots')
   .option('-h, --no-headless', 'disable headless mode')
   .action(options => {
-    powerschoolFetch('output/powerschool/fetch')(options.username, options.password, options.shallow, options.screenshots, options.headless);
+    powerschoolFetch('output/powerschool/fetch', options.username, options.password, options.shallow, options.screenshots, options.headless);
   });
 program.parse(process.argv);

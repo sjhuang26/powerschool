@@ -1,6 +1,6 @@
 const utils = require('./../web-scraping-utils');
 
-const query = utils.puppeteerPreset(async (puppeteer, promptly, outputDirectory, username, password, shallow, screenshots, headless) => {
+const query = async (puppeteer, promptly, outputDirectory, username, password, shallow, screenshots, headless) => {
   // INIT
   if (username === undefined) {
     username = await promptly.prompt('Username: ');
@@ -187,7 +187,6 @@ const query = utils.puppeteerPreset(async (puppeteer, promptly, outputDirectory,
   // WRAP UP
   browser.close();
   return result;
-});
+};
 
-module.exports.query = query;
 module.exports = utils.ioPreset(query);

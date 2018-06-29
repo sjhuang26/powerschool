@@ -1,6 +1,6 @@
 const utils = require('../web-scraping-utils');
 
-const query = utils.puppeteerPreset(async (puppeteer, promptly, outputDirectory, headless) => {
+const query = async (puppeteer, promptly, outputDirectory, headless) => {
   const {browser, page} = await utils.loadBrowser(headless);
 
   // LOAD WEBSITE
@@ -24,7 +24,6 @@ const query = utils.puppeteerPreset(async (puppeteer, promptly, outputDirectory,
 
   browser.close();
   return result;
-});
+};
 
-module.exports.query = query;
 module.exports = utils.ioPreset(query, 'output/aops/users');
