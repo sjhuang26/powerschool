@@ -36,7 +36,7 @@ const query = async (puppeteer, promptly, outputDirectory, username, password, s
   }
 
   // TAKE SCREENSHOT
-  if (extraScreenshots) {
+  if (screenshots) {
     console.log('Taking screenshot...');
     await page.screenshot({
       path: outputDirectory + '/screenshot-main-page.png',
