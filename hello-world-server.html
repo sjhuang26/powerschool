@@ -1,0 +1,27 @@
+<html>
+    <head>
+        <title>Hello world!</title>
+        <style>
+            #output {
+                white-space: pre;
+            }
+        </style>
+    </head>
+    <body>
+        <p>Enter command:</p>
+        <input id="input" type="text">
+        <button id="submit">Submit</button>
+        <hr>
+        <code id="output">...</code>
+        <script>
+            function $(id) {
+                return document.getElementById(id);
+            }
+            async function submit() {
+                $('output').textContent = 'Waiting for output...';
+                $('output').textContent = (await (await fetch(`api?command=${encodeURIComponent($('input').value)}`)).json()).stdout;
+            }
+            $('submit').addEventListener('click', submit);
+        </script>
+    </body>
+</html>
