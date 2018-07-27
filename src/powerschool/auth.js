@@ -1,9 +1,9 @@
 const Action = require('./../action');
 
-module.exports = new Action([
-    'username',
-    'password'
-], async (session, options) => {
+module.exports = new Action(`
+username=string
+password=string
+`, async (session, options) => {
     const page = session.page;
 
     // LOAD WEBSITE

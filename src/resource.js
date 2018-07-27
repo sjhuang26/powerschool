@@ -1,4 +1,5 @@
 const utils = require('./utils');
+const Schema = require('./schema');
 const path = require('path');
 
 class Resource {
@@ -17,4 +18,10 @@ class Resource {
     }
 }
 
+const serializeSchema = new Schema(`
+id=string
+path=string
+`);
+
 module.exports = Resource;
+module.exports.serializeSchema = serializeSchema;

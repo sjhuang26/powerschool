@@ -1,6 +1,6 @@
 const Action = require('./../action');
 
-module.exports = new Action([], async (session, options) => {
+module.exports = new Action('', async (session, options) => {
     const page = session.page;
 
     // LOAD WEBSITE
@@ -49,5 +49,5 @@ module.exports = new Action([], async (session, options) => {
         result.recentPosts.push(post);
     }
 
-    session.sendResult(result);
+    session.sendOutput('RESULT', result);
 });

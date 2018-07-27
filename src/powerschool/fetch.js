@@ -1,9 +1,9 @@
 const Action = require('./../action');
 
-module.exports = new Action([
-    'screenshots?',
-    'deep?'
-], async (session, options) => {
+module.exports = new Action(`
+screenshots=boolean?
+deep=boolean?
+`, async (session, options) => {
     const page = session.page;
 
     if (session.state.auth !== true) {
@@ -169,5 +169,5 @@ module.exports = new Action([
         }
     }
 
-    session.sendResult(result);
+    session.sendOutput('RESULT', result);
 });

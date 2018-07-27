@@ -1,6 +1,7 @@
 const Action = require('./../action');
+const Schema = require('./../schema');
 
-module.exports = new Action([], async (session, options) => {
+module.exports = new Action('', async (session, options) => {
     const {page} = session;
 
     // LOAD WEBSITE
@@ -21,5 +22,14 @@ module.exports = new Action([], async (session, options) => {
         };
         return result;
     });
-    session.sendResult(result);
+    session.sendOutput('RESULT', result, outputSchemas);
 });
+
+const outputSchemas = {
+    RESULT: new Schema(`
+    onlineUsers count: registeredCount: registeredHiddenCount:
+    onlineUsers registeredShown[] =string
+    `)
+};
+
+module.exports.outputSchemas = outputSchemas;

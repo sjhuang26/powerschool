@@ -2,8 +2,10 @@
 
 const utils = require('./utils');
 const Resource = require('./resource');
+const Schema = require('./schema');
 const path = require('path');
 const fs = require('fs');
+const mkdirp = require('mkdirp');
 
 class Session {
     constructor(options) {
@@ -13,7 +15,7 @@ class Session {
         this.directory = path.join(options.directory, this.id);
 
         if (!fs.existsSync(this.directory)){
-            fs.mkdirSync(this.directory);
+            mkdirp.sync(this.directory);
         }
     }
 
@@ -33,40 +35,50 @@ class Session {
         await this.browser.close();
     }
 
-    send(type, payload) {
-        let response = {
-            type: type,
-            ...payload
-        };
+    send(response, schema) {
+        if (schema === undefined) {
+            outputSchema.validate(response);
+        } else {
+            outputSchema.compose(schema).validate(response);
+        }
         console.log('Sending: ', response);
     }
 
-    sendResult(result) {
-        this.send('RESULT', result);
+    sendOutput(tag, output, schemas) {
+        this.send({
+            type: 'OUTPUT',
+            tag,
+            ...output
+        }, schemas === undefined ? undefined : schemas[tag]);
     }
 
     sendLog(message) {
-        this.send('LOG', {
-            message: message
+        this.send({
+            type: 'LOG',
+            message
         });
     }
 
-    sendImage(resource) {
-        this.send('IMAGE', {
-            resource: resource.serialize()
+    sendResource(tag, resource) {
+        this.send({
+            type: 'RESOURCE',
+            tag,
+            ...resource.serialize()
         });
     }
 
     sendError(message) {
-        this.send('ERROR', {
-            message: message
+        this.send({
+            type: 'ERROR',
+            message
         });
     }
 
     takeScreenshot(options) {
         const resource = this.createResource('png');
         this.page.screenshot({
-            path: resource.path
+            path: resource.path,
+            ...options
         });
         return resource;
     }
@@ -76,4 +88,14 @@ class Session {
     }
 }
 
+const outputSchema = new Schema(`
+type=OUTPUT|LOG|RESOURCE|ERROR
+type=LOG|ERROR?: message=string
+type=RESOURCE?: <resource>
+type=RESOURCE|OUTPUT?: tag
+`, {
+    resource: Resource.serializeSchema
+});
+
 module.exports = Session;
+module.exports.outputSchema = outputSchema;
