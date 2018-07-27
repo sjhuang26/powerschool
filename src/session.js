@@ -12,6 +12,7 @@ class Session {
         this.id = utils.createID();
         this.options = options || {};
         this.state = {};
+        this.inputStack = [];
         this.directory = path.join(options.directory, this.id);
 
         if (!fs.existsSync(this.directory)){
@@ -33,6 +34,33 @@ class Session {
 
     async end() {
         await this.browser.close();
+    }
+
+    pushInput(request) {
+        this.inputStack.push(request);
+    }
+
+    async receiveInput(tag, schemas) {
+        if (this.inputStack.length === 0) {
+            throw new Error('no input on stack');
+        } else {
+            const request = this.inputStack.shift();
+            const {tag: requestTag, ...requestWithoutTag} = request;
+            if (requestTag !== tag) {
+                throw new Error('tags do not match');
+            }
+            if (schemas === undefined) {
+                inputSchema.validate(request);
+            } else {
+                inputSchema.compose(schemas[tag]).validate(request);
+            }
+            console.log('Received: ', request);
+            return requestWithoutTag;
+        }
+    }
+
+    async receiveOptions(schemas) {
+        return await this.receiveInput('OPTIONS', schemas);
     }
 
     send(response, schema) {
@@ -59,6 +87,13 @@ class Session {
         });
     }
 
+    sendActionStatus(status) {
+        this.send({
+            type: 'ACTION_STATUS',
+            status: status
+        });
+    }
+
     sendResource(tag, resource) {
         this.send({
             type: 'RESOURCE',
@@ -74,9 +109,9 @@ class Session {
         });
     }
 
-    takeScreenshot(options) {
+    async takeScreenshot(options) {
         const resource = this.createResource('png');
-        this.page.screenshot({
+        await this.page.screenshot({
             path: resource.path,
             ...options
         });
@@ -86,16 +121,27 @@ class Session {
     createResource(extension) {
         return new Resource(this, extension);
     }
+
+    async runAction(action) {
+        this.sendActionStatus('STARTED');
+        await action.run(this);
+        this.sendActionStatus('FINISHED');
+    }
 }
 
 const outputSchema = new Schema(`
-type=OUTPUT|LOG|RESOURCE|ERROR
+type=OUTPUT|LOG|RESOURCE|ERROR|ACTION_STATUS
 type=LOG|ERROR?: message=string
-type=RESOURCE?: <resource>
+type=RESOURCE?: =<resource>
 type=RESOURCE|OUTPUT?: tag
+type=ACTION_STATUS?: status=STARTED|FINISHED
 `, {
     resource: Resource.serializeSchema
 });
+
+const inputSchema = new Schema(`
+tag=string
+`);
 
 module.exports = Session;
 module.exports.outputSchema = outputSchema;

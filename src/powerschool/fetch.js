@@ -1,9 +1,7 @@
 const Action = require('./../action');
+const Schema = require('./../schema');
 
-module.exports = new Action(`
-screenshots=boolean?
-deep=boolean?
-`, async (session, options) => {
+module.exports = new Action(async (session) => {
     const page = session.page;
 
     if (session.state.auth !== true) {
@@ -11,9 +9,11 @@ deep=boolean?
         return;
     }
 
+    const options = await session.receiveOptions(inputSchemas);
+
     // TAKE SCREENSHOT
     session.sendLog('Taking screenshot...');
-    if (options.screenshots) session.sendImage('MAIN_PAGE', await session.takeScreenshot({
+    if (options.screenshots) session.sendResource('MAIN_PAGE', await session.takeScreenshot({
         fullPage: 'true'
     }));
 
@@ -108,7 +108,7 @@ deep=boolean?
             session.sendLog('    scraping page ' + (i + 1) + ' of ' + links.length + '...');
             const link = links[i];
             await page.goto(link);
-            if (options.screenshots) session.sendImage('SCREENSHOT_COURSE_' + i, await session.takeScreenshot({
+            if (options.screenshots) session.sendResource('SCREENSHOT_COURSE_' + i, await session.takeScreenshot({
                 fullPage: 'true'
             }));
             Object.assign(result.courses[i], await page.evaluate(() => {
@@ -171,3 +171,10 @@ deep=boolean?
 
     session.sendOutput('RESULT', result);
 });
+
+const inputSchemas = {
+    OPTIONS: new Schema(`
+    screenshots=boolean?
+    deep=boolean?
+    `)
+};

@@ -1,10 +1,10 @@
 const Action = require('./../action');
+const Schema = require('./../schema');
 
-module.exports = new Action(`
-username=string
-password=string
-`, async (session, options) => {
+module.exports = new Action(async (session) => {
     const page = session.page;
+
+    const options = await session.receiveOptions(inputSchemas);
 
     // LOAD WEBSITE
     session.sendLog('Loading website...');
@@ -19,3 +19,10 @@ password=string
 
     session.state.auth = true;
 });
+
+const inputSchemas = {
+    OPTIONS: new Schema(`
+    username=string
+    password=string
+    `)
+};

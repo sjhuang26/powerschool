@@ -1,6 +1,6 @@
 const Action = require('./../action');
 
-module.exports = new Action('', async (session, options) => {
+module.exports = new Action('', async (session) => {
     const page = session.page;
 
     // LOAD WEBSITE

@@ -1,13 +1,12 @@
 const Action = require('./../action');
+const Schema = require('./../schema');
 
 const fs = require('fs');
 
-module.exports = new Action([
-    'username',
-    'password',
-    'screenshots?'
-], async (session, options) => {
+module.exports = new Action(async (session) => {
     const page = session.page;
+
+    const options = await session.receiveOptions(inputSchemas);
 
     // LOAD WEBSITE
     session.sendLog('Loading website...');
@@ -15,11 +14,11 @@ module.exports = new Action([
 
     // LOG IN
     session.sendLog('Logging in...');
-    let query = 'body > table > tbody > tr:nth-child(1) > td:nth-child(2) > table > tbody > tr > td > div:nth-child(4) > center > form > table > tbody > tr:nth-child(1) > td:nth-child(2) > input[type="text"]';
+    let query = 'body > table > tbody > tr:nth-child(1) > td:nth-child(2) > table > tbody > tr > td > div:nth-child(5) > center > form > table > tbody > tr:nth-child(1) > td:nth-child(2) > input[type="text"]';
     await page.type(query, options.username);
-    query = 'body > table > tbody > tr:nth-child(1) > td:nth-child(2) > table > tbody > tr > td > div:nth-child(4) > center > form > table > tbody > tr:nth-child(2) > td:nth-child(2) > input[type="password"]';
+    query = 'body > table > tbody > tr:nth-child(1) > td:nth-child(2) > table > tbody > tr > td > div:nth-child(5) > center > form > table > tbody > tr:nth-child(2) > td:nth-child(2) > input[type="password"]';
     await page.type(query, options.password);
-    query = 'body > table > tbody > tr:nth-child(1) > td:nth-child(2) > table > tbody > tr > td > div:nth-child(4) > center > form > input[type="submit"]:nth-child(2)';
+    query = 'body > table > tbody > tr:nth-child(1) > td:nth-child(2) > table > tbody > tr > td > div:nth-child(5) > center > form > input[type="submit"]:nth-child(2)';
     await Promise.all([
         page.click(query),
         page.waitForNavigation()
@@ -61,7 +60,7 @@ module.exports = new Action([
         const item = items[i];
         session.sendLog(`| ${item.isProblem ? `(${i + 1})` : '   '} ${item.title}`);
     }
-    let choice = 0; // TODO await session.receive();
+    let choice = (await session.receiveInput('ITEM_ID', inputSchemas)).item;
 
     // LOAD ITEM
     session.sendLog('Loading item...');
@@ -105,5 +104,16 @@ module.exports = new Action([
     fs.writeFileSync(resource.path, itemHTML, (err) => {
         if (err) session.sendError(err);
     });
-    session.sendResource(resource);
+    session.sendResource('PROBLEM_HTML', resource);
 });
+
+const inputSchemas = {
+    OPTIONS: new Schema(`
+    username=string
+    password=string
+    screenshots=boolean?
+    `),
+    ITEM_ID: new Schema(`
+    item=integer
+    `)
+};

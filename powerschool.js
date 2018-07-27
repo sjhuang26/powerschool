@@ -1,5 +1,5 @@
 const program = require('commander');
-const aops = require('./src/aops/action-module');
+const usaco = require('./src/usaco-trainer/action-module');
 const Session = require('./src/session');
 const utils = require('./src/utils');
 
@@ -22,7 +22,15 @@ program
       directory: 'output'
     });
     await session.start();
-    await aops.actions.users.run(session, {});
+    session.pushInput({
+      tag: 'OPTIONS',
+      screnshots: true
+    });
+    session.pushInput({
+      tag: 'ITEM_ID',
+      item: 4
+    });
+    await session.runAction(usaco.actions.fetch);
     await session.end();
   });
 

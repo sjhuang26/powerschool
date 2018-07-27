@@ -1,7 +1,7 @@
 const Action = require('./../action');
 const Schema = require('./../schema');
 
-module.exports = new Action('', async (session, options) => {
+module.exports = new Action(async (session) => {
     const {page} = session;
 
     // LOAD WEBSITE
