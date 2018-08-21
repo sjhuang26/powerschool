@@ -1,7 +1,7 @@
 class ActionModule {
-    constructor(actions) {
-        this.actions = actions;
-    }
+	constructor(actions) {
+		this.actions = actions;
+	}
 }
 
 module.exports = ActionModule;

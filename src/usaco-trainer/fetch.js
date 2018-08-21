@@ -4,76 +4,76 @@ const Schema = require('./../schema');
 const fs = require('fs');
 
 module.exports = new Action(async (session) => {
-    const page = session.page;
+	const page = session.page;
 
-    const options = await session.getOptionsInput(inputSchemas);
+	const options = await session.getOptionsInput(inputSchemas);
 
-    // LOAD WEBSITE
-    session.sendLog('Loading website...');
-    await page.goto('http://train.usaco.org/usacogate');
+	// LOAD WEBSITE
+	session.sendLog('Loading website...');
+	await page.goto('http://train.usaco.org/usacogate');
 
-    // LOG IN
-    session.sendLog('Logging in...');
-    let query = 'body > table > tbody > tr:nth-child(1) > td:nth-child(2) > table > tbody > tr > td > div:nth-child(5) > center > form > table > tbody > tr:nth-child(1) > td:nth-child(2) > input[type="text"]';
-    await page.type(query, options.username);
-    query = 'body > table > tbody > tr:nth-child(1) > td:nth-child(2) > table > tbody > tr > td > div:nth-child(5) > center > form > table > tbody > tr:nth-child(2) > td:nth-child(2) > input[type="password"]';
-    await page.type(query, options.password);
-    query = 'body > table > tbody > tr:nth-child(1) > td:nth-child(2) > table > tbody > tr > td > div:nth-child(5) > center > form > input[type="submit"]:nth-child(2)';
-    await Promise.all([
-        page.click(query),
-        page.waitForNavigation()
-    ]);
-    if (await page.evaluate(() => document.querySelector('body > table > tbody > tr:nth-child(1) > td:nth-child(2) > table > tbody > tr > td > div:nth-child(4) > p:nth-child(4) > font') !== null)) {
-        // LOGIN ERROR
-        session.sendError('LOGIN_FAILED');
-        return;
-    }
+	// LOG IN
+	session.sendLog('Logging in...');
+	let query = 'body > table > tbody > tr:nth-child(1) > td:nth-child(2) > table > tbody > tr > td > div:nth-child(5) > center > form > table > tbody > tr:nth-child(1) > td:nth-child(2) > input[type="text"]';
+	await page.type(query, options.username);
+	query = 'body > table > tbody > tr:nth-child(1) > td:nth-child(2) > table > tbody > tr > td > div:nth-child(5) > center > form > table > tbody > tr:nth-child(2) > td:nth-child(2) > input[type="password"]';
+	await page.type(query, options.password);
+	query = 'body > table > tbody > tr:nth-child(1) > td:nth-child(2) > table > tbody > tr > td > div:nth-child(5) > center > form > input[type="submit"]:nth-child(2)';
+	await Promise.all([
+		page.click(query),
+		page.waitForNavigation()
+	]);
+	if (await page.evaluate(() => document.querySelector('body > table > tbody > tr:nth-child(1) > td:nth-child(2) > table > tbody > tr > td > div:nth-child(4) > p:nth-child(4) > font') !== null)) {
+		// LOGIN ERROR
+		session.sendError('LOGIN_FAILED');
+		return;
+	}
 
-    // TAKE SCREENSHOT
-    if (options.screenshots) {
-        session.sendLog('Taking screenshot...');
-        session.sendResource('MAIN_PAGE', await session.takeScreenshot({
-            fullPage: 'true'
-        }));
-    }
+	// TAKE SCREENSHOT
+	if (options.screenshots) {
+		session.sendLog('Taking screenshot...');
+		session.sendResource('MAIN_PAGE', await session.takeScreenshot({
+			fullPage: 'true'
+		}));
+	}
 
-    // GET ITEM LIST
-    session.sendLog('Getting item list...');
-    let items = await page.evaluate(() => {
-        let items = [];
-        for (const e of document.querySelectorAll('body > center:nth-child(6) > table > tbody > tr > td:nth-child(3) > table > tbody > tr')) {
-            if (e.bgColor === '#f8f8ff') {
-                let item = {};
-                item.title = e.querySelector(':last-child > a').innerText;
-                item.link = e.querySelector(':last-child > a').href;
-                item.isProblem = item.title.startsWith('PROB');
-                items.push(item);
-            }
-        }
-        return items;
-    });
+	// GET ITEM LIST
+	session.sendLog('Getting item list...');
+	let items = await page.evaluate(() => {
+		let items = [];
+		for (const e of document.querySelectorAll('body > center:nth-child(6) > table > tbody > tr > td:nth-child(3) > table > tbody > tr')) {
+			if (e.bgColor === '#f8f8ff') {
+				let item = {};
+				item.title = e.querySelector(':last-child > a').innerText;
+				item.link = e.querySelector(':last-child > a').href;
+				item.isProblem = item.title.startsWith('PROB');
+				items.push(item);
+			}
+		}
+		return items;
+	});
 
-    // DISPLAY ITEM LIST
-    session.sendLog('| ###### ITEMS ######');
-    session.sendLog('| Choose an option.');
-    for (let i = 0; i < items.length; ++i) {
-        const item = items[i];
-        session.sendLog(`| ${item.isProblem ? `(${i + 1})` : '   '} ${item.title}`);
-    }
-    let choice = (await session.getInput('ITEM_ID', inputSchemas)).item;
+	// DISPLAY ITEM LIST
+	session.sendLog('| ###### ITEMS ######');
+	session.sendLog('| Choose an option.');
+	for (let i = 0; i < items.length; ++i) {
+		const item = items[i];
+		session.sendLog(`| ${item.isProblem ? `(${i + 1})` : '   '} ${item.title}`);
+	}
+	let choice = (await session.getInput('ITEM_ID', inputSchemas)).item;
 
-    // LOAD ITEM
-    session.sendLog('Loading item...');
-    await page.goto(items[choice - 1].link);
+	// LOAD ITEM
+	session.sendLog('Loading item...');
+	await page.goto(items[choice - 1].link);
 
-    // TODO better error handling
+	// TODO better error handling
 
-    // GENERATING ITEM
-    session.sendLog('Generating item...');
-    let itemHTML = await page.evaluate((() => {
-        document.body.removeAttribute('background');
-        document.querySelector('body > img').remove();
-        document.querySelector('head').insertAdjacentHTML('beforeend', `
+	// GENERATING ITEM
+	session.sendLog('Generating item...');
+	let itemHTML = await page.evaluate((() => {
+		document.body.removeAttribute('background');
+		document.querySelector('body > img').remove();
+		document.querySelector('head').insertAdjacentHTML('beforeend', `
     <style>
     body {
       /* This is Medium.com's text styling. */
@@ -94,28 +94,28 @@ module.exports = new Action(async (session) => {
     }
     </style>
     `);
-        document.querySelector('head').insertAdjacentHTML('afterbegin', `
+		document.querySelector('head').insertAdjacentHTML('afterbegin', `
     <base href="http://train.usaco.org">
     `);
-        return document.querySelector('html').outerHTML;
-    }));
+		return document.querySelector('html').outerHTML;
+	}));
 
-    // WRITE TO FILE
-    session.sendLog('Writing to file...');
-    let resource = session.createResource('html');
-    fs.writeFileSync(resource.path, itemHTML, (err) => {
-        if (err) session.sendError(err);
-    });
-    session.sendResource('PROBLEM_HTML', resource);
+	// WRITE TO FILE
+	session.sendLog('Writing to file...');
+	let resource = session.createResource('html');
+	fs.writeFileSync(resource.path, itemHTML, (err) => {
+		if (err) session.sendError(err);
+	});
+	session.sendResource('PROBLEM_HTML', resource);
 });
 
 const inputSchemas = {
-    OPTIONS: new Schema(`
+	OPTIONS: new Schema(`
     username=string
     password=string
     screenshots=boolean?
     `),
-    ITEM_ID: new Schema(`
+	ITEM_ID: new Schema(`
     item=integer
     `)
 };

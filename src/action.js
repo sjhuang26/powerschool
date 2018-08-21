@@ -1,11 +1,11 @@
 class Action {
-    constructor(action) {
-        this.action = action;
-    }
+	constructor(action) {
+		this.action = action;
+	}
 
-    async run(session) {
-        await this.action(session);
-    }
+	async run(session) {
+		await this.action(session);
+	}
 }
 
 module.exports = Action;
