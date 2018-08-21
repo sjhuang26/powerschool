@@ -9,7 +9,7 @@ module.exports = new Action(async (session) => {
         return;
     }
 
-    const options = await session.receiveOptions(inputSchemas);
+    const options = await session.getOptionsInput(inputSchemas);
 
     // TAKE SCREENSHOT
     session.sendLog('Taking screenshot...');

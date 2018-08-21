@@ -19,19 +19,23 @@ program
   .description('test')
   .action(async (options) => {
     const session = new Session({
-      directory: 'output'
+      handleSend(message) {
+        console.log('sending', message);
+      },
+      directory: 'output/'
     });
     await session.start();
-    session.pushInput({
+    session.receive({
       tag: 'OPTIONS',
-      screnshots: true
+      username: '...',
+      password: '...'
     });
-    session.pushInput({
+    session.receive({
       tag: 'ITEM_ID',
-      item: 4
+      item: 2
     });
     await session.runAction(usaco.actions.fetch);
-    await session.end();
+    session.close();
   });
 
 program.parse(process.argv);

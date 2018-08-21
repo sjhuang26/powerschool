@@ -12,8 +12,9 @@ class Session {
         this.id = utils.createID();
         this.options = options || {};
         this.state = {};
-        this.inputStack = [];
-        this.directory = path.join(options.directory, this.id);
+        this.inputBuffer = [];
+        this.handleSend = this.options.handleSend;
+        this.directory = path.join(this.options.directory, this.id);
 
         if (!fs.existsSync(this.directory)){
             mkdirp.sync(this.directory);
@@ -32,49 +33,52 @@ class Session {
         this.page = page;
     }
 
-    async end() {
+    async close() {
         await this.browser.close();
     }
 
-    pushInput(request) {
-        this.inputStack.push(request);
+    receive(message) {
+        this.inputBuffer.push(message);
     }
 
-    async receiveInput(tag, schemas) {
-        if (this.inputStack.length === 0) {
-            throw new Error('no input on stack');
-        } else {
-            const request = this.inputStack.shift();
-            const {tag: requestTag, ...requestWithoutTag} = request;
-            if (requestTag !== tag) {
-                throw new Error('tags do not match');
-            }
-            if (schemas === undefined) {
-                inputSchema.validate(request);
-            } else {
-                inputSchema.compose(schemas[tag]).validate(request);
-            }
-            console.log('Received: ', request);
-            return requestWithoutTag;
+    async getInput(tag, schemas) {
+        // TODO tags for input
+        if (this.inputBuffer.length === 0) {
+            await new Promise((resolve, reject) => {
+                this.handleReceive = () => {
+                    resolve();
+                };
+            });
         }
+        const input = this.inputBuffer.shift();
+        const {tag: inputTag, ...inputWithoutTag} = input;
+        if (inputTag !== tag) {
+            throw new Error(`tags do not match: input=${inputTag}, desired=${tag}`);
+        }
+        if (schemas === undefined) {
+            inputSchema.validate(input);
+        } else {
+            inputSchema.compose(schemas[tag]).validate(input);
+        }
+        return inputWithoutTag;
     }
 
-    async receiveOptions(schemas) {
-        return await this.receiveInput('OPTIONS', schemas);
+    async getOptionsInput(schemas) {
+        return await this.getInput('OPTIONS', schemas);
     }
 
-    send(response, schema) {
+    send(message, schema) {
         if (schema === undefined) {
-            outputSchema.validate(response);
+            outputSchema.validate(message);
         } else {
-            outputSchema.compose(schema).validate(response);
+            outputSchema.compose(schema).validate(message);
         }
-        console.log('Sending: ', response);
+        this.handleSend(message);
     }
 
-    sendOutput(tag, output, schemas) {
+    sendResult(tag, result, schemas) {
         this.send({
-            type: 'OUTPUT',
+            type: 'RESULT',
             tag,
             ...output
         }, schemas === undefined ? undefined : schemas[tag]);
@@ -130,10 +134,10 @@ class Session {
 }
 
 const outputSchema = new Schema(`
-type=OUTPUT|LOG|RESOURCE|ERROR|ACTION_STATUS
+type=RESULT|LOG|RESOURCE|ERROR|ACTION_STATUS
 type=LOG|ERROR?: message=string
 type=RESOURCE?: =<resource>
-type=RESOURCE|OUTPUT?: tag
+type=RESOURCE|RESULT?: tag
 type=ACTION_STATUS?: status=STARTED|FINISHED
 `, {
     resource: Resource.serializeSchema

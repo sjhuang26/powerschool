@@ -6,7 +6,7 @@ const fs = require('fs');
 module.exports = new Action(async (session) => {
     const page = session.page;
 
-    const options = await session.receiveOptions(inputSchemas);
+    const options = await session.getOptionsInput(inputSchemas);
 
     // LOAD WEBSITE
     session.sendLog('Loading website...');
@@ -60,11 +60,13 @@ module.exports = new Action(async (session) => {
         const item = items[i];
         session.sendLog(`| ${item.isProblem ? `(${i + 1})` : '   '} ${item.title}`);
     }
-    let choice = (await session.receiveInput('ITEM_ID', inputSchemas)).item;
+    let choice = (await session.getInput('ITEM_ID', inputSchemas)).item;
 
     // LOAD ITEM
     session.sendLog('Loading item...');
     await page.goto(items[choice - 1].link);
+
+    // TODO better error handling
 
     // GENERATING ITEM
     session.sendLog('Generating item...');

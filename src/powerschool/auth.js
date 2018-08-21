@@ -4,7 +4,7 @@ const Schema = require('./../schema');
 module.exports = new Action(async (session) => {
     const page = session.page;
 
-    const options = await session.receiveOptions(inputSchemas);
+    const options = await session.getOptionsInput(inputSchemas);
 
     // LOAD WEBSITE
     session.sendLog('Loading website...');

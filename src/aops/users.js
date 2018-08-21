@@ -22,7 +22,7 @@ module.exports = new Action(async (session) => {
         };
         return result;
     });
-    session.sendOutput('RESULT', result, outputSchemas);
+    session.sendResult('RESULT', result, outputSchemas);
 });
 
 const outputSchemas = {

@@ -49,5 +49,14 @@ module.exports = new Action('', async (session) => {
         result.recentPosts.push(post);
     }
 
-    session.sendOutput('RESULT', result);
+    session.sendResult('RESULT', result, outputSchemas);
 });
+
+// TODO
+const outputSchemas = {
+    RESULT: new Schema(`
+    
+    `)
+};
+
+module.exports.outputSchemas = outputSchemas;
